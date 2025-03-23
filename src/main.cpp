@@ -612,6 +612,50 @@ public:
   }
 };
 
+enum intercom_model_t
+{
+    // int Model1;
+    // int Model2;
+};
+
+struct intercom_spec_t
+{
+    // note1_frequency
+    // note1_sec
+    // note2_frequency
+    // note2_sec
+
+    // function 
+};
+
+struct intercom_detect_data_t
+{
+    bool detected;
+
+};
+
+class intercom_detector_t
+{
+    // メンバ変数
+    // const intercom_spec_t intercom1;
+    // const intercom_spec_t intercom2;
+
+
+
+    // intercom1_detected
+    // intercom2_detected
+
+
+public:
+    // public メソッド
+    // bool update(fft_data_t, fft_data) 
+
+
+private:
+    // private メソッド
+};
+
+
 // The higher the sample rate, the higher the frequency results obtained by FFT.
 // If limited to the audible range, 24kHz to 48kHz is sufficient.
 static constexpr const size_t SAMPLE_RATE = 24000;
