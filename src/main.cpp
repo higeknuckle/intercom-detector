@@ -157,15 +157,10 @@ class detect_drawer_t
 
   rect_t draw_rect = {0, 0, 0, 0};
 
-  // uint32_t bg_color = 0x000000u;
-  uint32_t bg_color = TFT_CYAN;
-  // uint32_t fg_color = 0xFFFFFFu;
-  uint32_t fg_color = TFT_GOLD;
-  uint32_t line_color = 0x303030u;
-  uint32_t text_color = 0xFFFF00u;
-  uint32_t text_color2 = 0xFF0000u;
-  uint32_t text_color3 = 0x00FF00u;
-  uint32_t text_color4 = 0x0000FFu;
+  uint32_t bg_color = 0x000000u;
+  // uint32_t bg_color = TFT_CYAN;
+  uint32_t fg_color = 0xFFFFFFu;
+  // uint32_t fg_color = TFT_GOLD;
 
 public:
   bool setup(LGFX_Device *gfx, const rect_t &rect)
@@ -178,9 +173,8 @@ public:
     draw_rect = rect;
 
     _canvas = new M5Canvas(gfx);
-    _canvas->createSprite(rect.w, rect.h);
-    _canvas->fillRect(0, 0, rect.w, rect.h, bg_color);
-    _canvas->setTextColor(fg_color);
+    _canvas->createSprite(draw_rect.w, draw_rect.h);
+    rect_t rect_canvas = {0, 0, _canvas->width(), _canvas->height()};
     M5_LOGD("_canvas created");
 
     _c_indicator = new M5Canvas(_canvas);
@@ -189,29 +183,39 @@ public:
     _c_message = new M5Canvas(_canvas);
     M5_LOGD("sub canvas created");
 
-    _c_indicator->createSprite((int16_t)(rect.w * (2.0 / 3.0)), (int16_t)(rect.h / 2.0));
-    _c_status_line->createSprite((int16_t)(rect.w * (1.0 / 3.0)), (int16_t)(rect.h / 4.0));
-    _c_status_wifi->createSprite((int16_t)(rect.w * (1.0 / 3.0)), (int16_t)(rect.h / 4.0));
-    _c_message->createSprite(rect.w, (int16_t)(rect.h / 2));
+    rect_t rect_indicator = {rect_canvas.x, rect_canvas.y, (int16_t)(rect_canvas.w * (2.0 / 3.0)), (int16_t)(rect_canvas.h / 2.0)};
+    rect_t rect_status_line = {rect_canvas.x, rect_canvas.y, (int16_t)(rect_canvas.w * (1.0 / 3.0)), (int16_t)(rect_canvas.h / 4.0)};
+    rect_t rect_status_wifi = {rect_canvas.x, rect_canvas.y, (int16_t)(rect_canvas.w * (1.0 / 3.0)), (int16_t)(rect_canvas.h / 4.0)};
+    rect_t rect_message = {rect_canvas.x, rect_canvas.y, rect_canvas.w, (int16_t)(rect_canvas.h / 2.0)};
+
+    _c_indicator->createSprite(rect_indicator.w, rect_indicator.h);
+    _c_status_line->createSprite(rect_status_line.w, rect_status_line.h);
+    _c_status_wifi->createSprite(rect_status_wifi.w, rect_status_wifi.h);
+    _c_message->createSprite(rect_message.w, rect_message.h);
     M5_LOGD("sprites created");
     M5_LOGD("_c_status_line->width(): %d", _c_status_line->width());
 
-    float status_text_width = std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi")) / (float)_c_status_line->width();
-    M5_LOGD("status_text_width: %.2f", status_text_width);
-    _c_status_line->setTextSize(status_text_width);
-    _c_status_line->setColor(TFT_GREEN);
-    _c_status_line->println("LINE");
-    _c_status_wifi->setTextSize(status_text_width);
-    _c_status_wifi->setColor(TFT_GREEN);
-    _c_status_wifi->println("WiFi");
+    float status_text_size = _c_status_line->getTextSizeX() * (_c_status_line->width() - 5) / (float)std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi"));
+    M5_LOGD("status_text_size: %.2f", status_text_size);
+    _c_status_line->fillRect(0, 0, rect_status_line.w, rect_status_line.h, TFT_DARKGREEN);
+    _c_status_line->setTextSize(status_text_size);
+    _c_status_line->setTextColor(fg_color);
+    _c_status_line->setTextDatum(MC_DATUM);
+    _c_status_line->drawString("LINE", rect_status_line.w / 2, rect_status_line.h / 2);
+    _c_status_wifi->fillRect(0, 0, rect_status_wifi.w, rect_status_wifi.h, TFT_MAROON);
+    _c_status_wifi->setTextSize(status_text_size);
+    _c_status_wifi->setTextColor(fg_color);
+    _c_status_line->setTextDatum(MC_DATUM);
+    _c_status_wifi->drawString("WiFi", rect_status_wifi.w / 2, rect_status_wifi.h / 2);
     M5_LOGD("status_text created");
 
-    _c_indicator->pushSprite(rect.x, rect.y);
-    _c_status_line->pushSprite((int32_t)(rect.x + rect.w * (2.0 / 3.0)), rect.y);
-    _c_status_wifi->pushSprite((int32_t)(rect.x + rect.w * (2.0 / 3.0)), (int32_t)(rect.y + rect.h / 4.0));
-    _c_message->pushSprite(rect.x, (int32_t)(rect.y + rect.h / 2.0));
+    // update display
+    _c_indicator->pushSprite(rect_indicator.x, rect_indicator.y);
+    _c_status_line->pushSprite(rect_status_line.x, rect_status_line.y);
+    _c_status_wifi->pushSprite(rect_status_wifi.x, rect_status_wifi.y);
+    _c_message->pushSprite(rect_message.x, rect_message.y);
     M5_LOGD("sub canvas pushed");
-    _canvas->pushSprite(rect.x, rect.y);
+    _canvas->pushSprite(draw_rect.x, draw_rect.y);
     M5_LOGD("canvas pushed");
 
     return true;
