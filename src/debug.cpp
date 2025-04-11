@@ -31,10 +31,10 @@ bool debug_drawer_t::update(const fft_data_t &fft_data)
     step = 0;
     _canvas->clear();
     _canvas->setCursor(0, 0);
-    _canvas->printf("849: %.2f\n", fft_data.fdata[INDEX_INTERCOM_1_NOTE_1]);
-    _canvas->printf("681: %.2f\n", fft_data.fdata[INDEX_INTERCOM_1_NOTE_2]);
-    _canvas->printf("656: %.2f\n", fft_data.fdata[INDEX_INTERCOM_2_NOTE_1]);
-    _canvas->printf("519: %.2f\n", fft_data.fdata[INDEX_INTERCOM_2_NOTE_2]);
+    _canvas->printf("A:%8.2f\n", fft_data.fdata[INDEX_INTERCOM_1_NOTE_1]);
+    _canvas->printf("F:%8.2f\n", fft_data.fdata[INDEX_INTERCOM_1_NOTE_2]);
+    _canvas->printf("E:%8.2f\n", fft_data.fdata[INDEX_INTERCOM_2_NOTE_1]);
+    _canvas->printf("C:%8.2f\n", fft_data.fdata[INDEX_INTERCOM_2_NOTE_2]);
     _canvas->pushSprite(draw_rect.x, draw_rect.y);
   }
   return true;

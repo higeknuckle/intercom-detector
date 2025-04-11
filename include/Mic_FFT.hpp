@@ -146,4 +146,3 @@ private:
     uint32_t fg_color = 0xFFFF00u;
     int step = 0;
 };
-

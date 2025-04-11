@@ -146,6 +146,66 @@ public:
   }
 };
 
+class detect_drawer_t
+{
+  LGFX_Device *_gfx = nullptr;
+  M5Canvas *_canvas = nullptr;
+  M5Canvas *_c_indicator = nullptr;
+  M5Canvas *_c_status_line = nullptr;
+  M5Canvas *_c_status_wifi = nullptr;
+  M5Canvas *_c_message = nullptr;
+
+  rect_t draw_rect = {0, 0, 0, 0};
+
+  uint32_t bg_color = 0x000000u;
+  uint32_t fg_color = 0xFFFFFFu;
+  uint32_t line_color = 0x303030u;
+  uint32_t text_color = 0xFFFF00u;
+  uint32_t text_color2 = 0xFF0000u;
+  uint32_t text_color3 = 0x00FF00u;
+  uint32_t text_color4 = 0x0000FFu;
+
+public:
+  bool setup(LGFX_Device *gfx, const rect_t &rect)
+  {
+    if (gfx == nullptr)
+    {
+      return false;
+    }
+    _gfx = gfx;
+    draw_rect = rect;
+
+    _canvas = new M5Canvas(gfx);
+    _c_indicator = new M5Canvas(_canvas);
+    _c_status_line = new M5Canvas(_canvas);
+    _c_status_wifi = new M5Canvas(_canvas);
+    _c_message = new M5Canvas(_canvas);
+
+    _c_indicator->createSprite(rect.w * (2 / 3), rect.h / 2);
+    _c_status_line->createSprite(rect.w * (1 / 3), rect.h / 4);
+    _c_status_wifi->createSprite(rect.w * (1 / 3), rect.h / 4);
+    _c_message->createSprite(rect.w, rect.h / 2);
+
+    long status_text_width = std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi")) / _c_status_line->width();
+    _c_status_line->setTextSize(status_text_width);
+    _c_status_line->setColor(TFT_GREEN);
+    _c_status_line->println("LINE");
+    _c_status_wifi->setTextSize(status_text_width);
+    _c_status_wifi->setColor(TFT_GREEN);
+    _c_status_wifi->println("WiFi");
+
+    _c_indicator->pushSprite(rect.x, rect.y);
+    _c_status_line->pushSprite(rect.x + rect.w * (2 / 3), rect.y);
+    _c_status_wifi->pushSprite(rect.x + rect.w * (2 / 3), rect.y + rect.h / 4);
+    _c_message->pushSprite(rect.x, rect.y + rect.h / 2);
+    _canvas->pushSprite(rect.x, rect.y);
+
+    return true;
+  }
+
+private:
+};
+
 static fft_function_t fft_function;
 static fft_data_t fft_data;
 static wav_data_t wav_data;
@@ -156,6 +216,7 @@ static fft_history_t fft_history;
 static debug_drawer_t debug_drawer;
 static detector_t intercom1_detector(INDEX_INTERCOM_1_NOTE_1, 500.0f, INDEX_INTERCOM_1_NOTE_2, 700.0f, 2000.0f);
 static detector_t intercom2_detector(INDEX_INTERCOM_2_NOTE_1, 500.0f, INDEX_INTERCOM_2_NOTE_2, 700.0f, 2000.0f);
+static detect_drawer_t detect_drawer;
 
 void setup()
 {
@@ -264,6 +325,7 @@ void setup()
   y += h;
   rect_t rect_fft_history = {0, y, w, h};
   rect_t rect_debug = {0, y, w, (int16_t)(h << 1)};
+  rect_t rect_detect = {0, y, w, (int16_t)(h << 1)};
   y += h;
   rect_t rect_wav_drawer = {0, y, w, h};
 
@@ -272,7 +334,8 @@ void setup()
   fft_drawer.setup(&M5.Display, rect_fft_drawer);
   fft_history.setup(&M5.Display, rect_fft_history);
   wav_drawer.setup(&M5.Display, rect_wav_drawer);
-  debug_drawer.setup(&M5.Display, rect_debug);
+  // debug_drawer.setup(&M5.Display, rect_debug);
+  detect_drawer.setup(&M5.Display, rect_detect);
 
   M5.Display.setTextSize(w / 64.0f, h / 16.0f);
   M5.Display.setFont(&fonts::AsciiFont8x16);
@@ -330,8 +393,8 @@ void loop()
     case 4:
       fft_peak.update(fft_data);
       // debug_drawer.update(fft_data);
-      // debug_drawer.update(fft_data, INDEX_INTERCOM_1_NOTE_1);
-      debug_drawer.update(fft_peak);
+      debug_drawer.update(fft_data, INDEX_INTERCOM_2_NOTE_1);
+      // debug_drawer.update(fft_peak);
       intercom1_detector.update(fft_peak);
       intercom2_detector.update(fft_peak);
       if (intercom1_detector.detected())

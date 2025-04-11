@@ -498,7 +498,7 @@ bool fft_peak_t::update(const fft_data_t &fft_data)
       }
       boarder_value[i] = thresh;
       thresh = thresh * 0.9f;
-    }
+    }                                     
     for (int i = loop_end - 1; i >= 0; --i)
     {
       int value = fdata[i];
@@ -513,7 +513,7 @@ bool fft_peak_t::update(const fft_data_t &fft_data)
       thresh = thresh * 0.9f;
     }
   }
-  static constexpr const size_t peak_index_set_size = 8;
+  static constexpr const size_t peak_index_set_size = 3;
   std::multimap<float, uint16_t> peak_map;
   for (int i = 0; i < loop_end; ++i)
   {
@@ -586,11 +586,7 @@ bool fft_peak_t::update(const fft_data_t &fft_data)
 bool fft_peak_t::isPeak(const uint16_t &peak_index) const
 {
   auto it = peak_index_set.find(peak_index);
-  if (it != peak_index_set.end())
-  {
-    return true;
-  }
-  return false;
+  return it != peak_index_set.end();
 }
 
 // fft_history_t class definitions
