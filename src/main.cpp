@@ -157,10 +157,10 @@ class detect_drawer_t
 
   rect_t draw_rect = {0, 0, 0, 0};
 
-  uint32_t bg_color = 0x000000u;
-  // uint32_t bg_color = TFT_CYAN;
-  uint32_t fg_color = 0xFFFFFFu;
-  // uint32_t fg_color = TFT_GOLD;
+  uint32_t bg_color = TFT_BLACK;
+  uint32_t fg_color = TFT_WHITE;
+  uint32_t ok_color = TFT_DARKGREEN;
+  uint32_t error_color = TFT_MAROON;
 
 public:
   bool setup(LGFX_Device *gfx, const rect_t &rect)
@@ -174,39 +174,38 @@ public:
 
     _canvas = new M5Canvas(gfx);
     _canvas->createSprite(draw_rect.w, draw_rect.h);
-    rect_t rect_canvas = {0, 0, _canvas->width(), _canvas->height()};
-    M5_LOGD("_canvas created");
+    rect_t rect_canvas = {0, 0, (int16_t)_canvas->width(), (int16_t)_canvas->height()};
 
     _c_indicator = new M5Canvas(_canvas);
     _c_status_line = new M5Canvas(_canvas);
     _c_status_wifi = new M5Canvas(_canvas);
     _c_message = new M5Canvas(_canvas);
-    M5_LOGD("sub canvas created");
 
     rect_t rect_indicator = {rect_canvas.x, rect_canvas.y, (int16_t)(rect_canvas.w * (2.0 / 3.0)), (int16_t)(rect_canvas.h / 2.0)};
-    rect_t rect_status_line = {rect_canvas.x, rect_canvas.y, (int16_t)(rect_canvas.w * (1.0 / 3.0)), (int16_t)(rect_canvas.h / 4.0)};
-    rect_t rect_status_wifi = {rect_canvas.x, rect_canvas.y, (int16_t)(rect_canvas.w * (1.0 / 3.0)), (int16_t)(rect_canvas.h / 4.0)};
-    rect_t rect_message = {rect_canvas.x, rect_canvas.y, rect_canvas.w, (int16_t)(rect_canvas.h / 2.0)};
+    rect_t rect_status_line = {(int16_t)(rect_canvas.x + rect_indicator.w), rect_canvas.y, (int16_t)(rect_canvas.w * (1.0 / 3.0)), (int16_t)(rect_canvas.h / 4.0)};
+    rect_t rect_status_wifi = {(int16_t)(rect_canvas.x + rect_indicator.w), (int16_t)(rect_canvas.y + rect_status_line.h), (int16_t)(rect_canvas.w * (1.0 / 3.0)), (int16_t)(rect_canvas.h / 4.0)};
+    rect_t rect_message = {rect_canvas.x, (int16_t)(rect_canvas.y + rect_indicator.h), rect_canvas.w, (int16_t)(rect_canvas.h / 2.0)};
 
     _c_indicator->createSprite(rect_indicator.w, rect_indicator.h);
     _c_status_line->createSprite(rect_status_line.w, rect_status_line.h);
     _c_status_wifi->createSprite(rect_status_wifi.w, rect_status_wifi.h);
     _c_message->createSprite(rect_message.w, rect_message.h);
-    M5_LOGD("sprites created");
-    M5_LOGD("_c_status_line->width(): %d", _c_status_line->width());
 
-    float status_text_size = _c_status_line->getTextSizeX() * (_c_status_line->width() - 5) / (float)std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi"));
-    M5_LOGD("status_text_size: %.2f", status_text_size);
-    _c_status_line->fillRect(0, 0, rect_status_line.w, rect_status_line.h, TFT_DARKGREEN);
+    // M5_LOGD("default canvas font: %s", _canvas->getFont());
+    // _c_status_line->setFont(&fonts::lgfxJapanGothic_20);
+    // _c_status_wifi->setFont(_c_status_line->getFont());
+    float status_text_size = _c_status_line->getTextSizeX() * (_c_status_line->width() - 4) / (float)std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi"));
+    M5_LOGD("status_text_size: %f", status_text_size);
+    _c_status_line->fillRect(0, 0, rect_status_line.w, rect_status_line.h, error_color);
     _c_status_line->setTextSize(status_text_size);
     _c_status_line->setTextColor(fg_color);
     _c_status_line->setTextDatum(MC_DATUM);
-    _c_status_line->drawString("LINE", rect_status_line.w / 2, rect_status_line.h / 2);
-    _c_status_wifi->fillRect(0, 0, rect_status_wifi.w, rect_status_wifi.h, TFT_MAROON);
+    _c_status_line->drawString("LINE", rect_status_line.w / 2 + 2, rect_status_line.h / 2);
+    _c_status_wifi->fillRect(0, 0, rect_status_wifi.w, rect_status_wifi.h, error_color);
     _c_status_wifi->setTextSize(status_text_size);
     _c_status_wifi->setTextColor(fg_color);
-    _c_status_line->setTextDatum(MC_DATUM);
-    _c_status_wifi->drawString("WiFi", rect_status_wifi.w / 2, rect_status_wifi.h / 2);
+    _c_status_wifi->setTextDatum(MC_DATUM);
+    _c_status_wifi->drawString("WiFi", rect_status_wifi.w / 2 + 2, rect_status_wifi.h / 2);
     M5_LOGD("status_text created");
 
     // update display
@@ -217,6 +216,33 @@ public:
     M5_LOGD("sub canvas pushed");
     _canvas->pushSprite(draw_rect.x, draw_rect.y);
     M5_LOGD("canvas pushed");
+
+    return true;
+  }
+
+  bool update(const fft_data_t &fft_data, const fft_peak_t &fft_peak)
+  {
+    if (_gfx == nullptr)
+    {
+      return false;
+    }
+
+    // update indicator
+
+    // update status
+    // if (WiFi.status() == WL_CONNECTED)
+    // {
+    //   _c_status_wifi->fillRect(0, 0, _c_status_wifi->width(), _c_status_wifi->height(), ok_color);
+    // }
+    // else
+    // {
+    //   _c_status_wifi->fillRect(0, 0, _c_status_wifi->width(), _c_status_wifi->height(), error_color);
+    // }
+    _c_status_wifi->fillRect(0, 0, _c_status_wifi->width(), _c_status_wifi->height(), WiFi.status() == WL_CONNECTED ? ok_color : error_color);
+
+    // update message
+
+    // update display
 
     return true;
   }
@@ -309,7 +335,7 @@ void setup()
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_STA);
 
-  /*
+  // /*
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   // Try until connected
@@ -323,7 +349,7 @@ void setup()
   canvas->println("\r\nConnected!");
   canvas->pushSprite(0, 0);
   M5.delay(2000);
-  */
+  // */
 
   // Refresh Display
   canvas->clear();
@@ -426,6 +452,7 @@ void loop()
         M5_LOGD("intercom 2 Detected!!!");
         // sendLineNotification("玄関のインターホンが鳴ったよ！");
       }
+      detect_drawer.update(fft_data, fft_peak);
       break;
     }
   }
