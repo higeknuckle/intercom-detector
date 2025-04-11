@@ -157,8 +157,10 @@ class detect_drawer_t
 
   rect_t draw_rect = {0, 0, 0, 0};
 
-  uint32_t bg_color = 0x000000u;
-  uint32_t fg_color = 0xFFFFFFu;
+  // uint32_t bg_color = 0x000000u;
+  uint32_t bg_color = TFT_CYAN;
+  // uint32_t fg_color = 0xFFFFFFu;
+  uint32_t fg_color = TFT_GOLD;
   uint32_t line_color = 0x303030u;
   uint32_t text_color = 0xFFFF00u;
   uint32_t text_color2 = 0xFF0000u;
@@ -176,29 +178,41 @@ public:
     draw_rect = rect;
 
     _canvas = new M5Canvas(gfx);
+    _canvas->createSprite(rect.w, rect.h);
+    _canvas->fillRect(0, 0, rect.w, rect.h, bg_color);
+    _canvas->setTextColor(fg_color);
+    M5_LOGD("_canvas created");
+
     _c_indicator = new M5Canvas(_canvas);
     _c_status_line = new M5Canvas(_canvas);
     _c_status_wifi = new M5Canvas(_canvas);
     _c_message = new M5Canvas(_canvas);
+    M5_LOGD("sub canvas created");
 
-    _c_indicator->createSprite(rect.w * (2 / 3), rect.h / 2);
-    _c_status_line->createSprite(rect.w * (1 / 3), rect.h / 4);
-    _c_status_wifi->createSprite(rect.w * (1 / 3), rect.h / 4);
-    _c_message->createSprite(rect.w, rect.h / 2);
+    _c_indicator->createSprite((int16_t)(rect.w * (2.0 / 3.0)), (int16_t)(rect.h / 2.0));
+    _c_status_line->createSprite((int16_t)(rect.w * (1.0 / 3.0)), (int16_t)(rect.h / 4.0));
+    _c_status_wifi->createSprite((int16_t)(rect.w * (1.0 / 3.0)), (int16_t)(rect.h / 4.0));
+    _c_message->createSprite(rect.w, (int16_t)(rect.h / 2));
+    M5_LOGD("sprites created");
+    M5_LOGD("_c_status_line->width(): %d", _c_status_line->width());
 
-    long status_text_width = std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi")) / _c_status_line->width();
+    float status_text_width = std::max(_c_status_line->textWidth("LINE"), _c_status_wifi->textWidth("WiFi")) / (float)_c_status_line->width();
+    M5_LOGD("status_text_width: %.2f", status_text_width);
     _c_status_line->setTextSize(status_text_width);
     _c_status_line->setColor(TFT_GREEN);
     _c_status_line->println("LINE");
     _c_status_wifi->setTextSize(status_text_width);
     _c_status_wifi->setColor(TFT_GREEN);
     _c_status_wifi->println("WiFi");
+    M5_LOGD("status_text created");
 
     _c_indicator->pushSprite(rect.x, rect.y);
-    _c_status_line->pushSprite(rect.x + rect.w * (2 / 3), rect.y);
-    _c_status_wifi->pushSprite(rect.x + rect.w * (2 / 3), rect.y + rect.h / 4);
-    _c_message->pushSprite(rect.x, rect.y + rect.h / 2);
+    _c_status_line->pushSprite((int32_t)(rect.x + rect.w * (2.0 / 3.0)), rect.y);
+    _c_status_wifi->pushSprite((int32_t)(rect.x + rect.w * (2.0 / 3.0)), (int32_t)(rect.y + rect.h / 4.0));
+    _c_message->pushSprite(rect.x, (int32_t)(rect.y + rect.h / 2.0));
+    M5_LOGD("sub canvas pushed");
     _canvas->pushSprite(rect.x, rect.y);
+    M5_LOGD("canvas pushed");
 
     return true;
   }
@@ -291,7 +305,7 @@ void setup()
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_STA);
 
-  // /*
+  /*
   WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   // Try until connected
@@ -305,7 +319,7 @@ void setup()
   canvas->println("\r\nConnected!");
   canvas->pushSprite(0, 0);
   M5.delay(2000);
-  // */
+  */
 
   // Refresh Display
   canvas->clear();
@@ -334,8 +348,9 @@ void setup()
   fft_drawer.setup(&M5.Display, rect_fft_drawer);
   fft_history.setup(&M5.Display, rect_fft_history);
   wav_drawer.setup(&M5.Display, rect_wav_drawer);
-  // debug_drawer.setup(&M5.Display, rect_debug);
+  debug_drawer.setup(&M5.Display, rect_debug);
   detect_drawer.setup(&M5.Display, rect_detect);
+  M5_LOGD("detect_drawer initialized.");
 
   M5.Display.setTextSize(w / 64.0f, h / 16.0f);
   M5.Display.setFont(&fonts::AsciiFont8x16);
@@ -393,7 +408,7 @@ void loop()
     case 4:
       fft_peak.update(fft_data);
       // debug_drawer.update(fft_data);
-      debug_drawer.update(fft_data, INDEX_INTERCOM_2_NOTE_1);
+      // debug_drawer.update(fft_data, INDEX_INTERCOM_2_NOTE_1);
       // debug_drawer.update(fft_peak);
       intercom1_detector.update(fft_peak);
       intercom2_detector.update(fft_peak);
